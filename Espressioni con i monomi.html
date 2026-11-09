@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Espressioni con i monomi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* Layout: quaderno a quadretti. Barra fissa con le tappe della lezione, una tappa per volta, schede esercizio in griglia. */
+:root{
+  --paper:#eef2f6; --card:#ffffff; --ink:#172338; --muted:#566379; --line:#cdd6e2;
+  --accent:#2747d4; --accent-ink:#ffffff; --mark:#ffe169; --mark-ink:#172338;
+  --good:#17784a; --good-bg:#e3f4ea; --bad:#bf3626; --bad-bg:#fbe7e3; --warn:#8a5d00; --warn-bg:#fff3cf;
+  --grid:rgba(39,71,212,.07);
+  --f-display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
+  --f-body:"Atkinson Hyperlegible",Verdana,sans-serif;
+  --f-math:"STIX Two Text","Cambria Math",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#111826; --card:#1a2334; --ink:#e8edf5; --muted:#9ba8bd; --line:#2f3b52;
+    --accent:#93a8ff; --accent-ink:#0d1424; --mark:#5c4d00; --mark-ink:#fff4c2;
+    --good:#62d394; --good-bg:#16332a; --bad:#ff8f80; --bad-bg:#3a1f1f; --warn:#e6b84a; --warn-bg:#352c10;
+    --grid:rgba(147,168,255,.06);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#111826; --card:#1a2334; --ink:#e8edf5; --muted:#9ba8bd; --line:#2f3b52;
+  --accent:#93a8ff; --accent-ink:#0d1424; --mark:#5c4d00; --mark-ink:#fff4c2;
+  --good:#62d394; --good-bg:#16332a; --bad:#ff8f80; --bad-bg:#3a1f1f; --warn:#e6b84a; --warn-bg:#352c10;
+  --grid:rgba(147,168,255,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* barra */
+.top{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:2px solid var(--ink)}
+.top-in{max-width:1180px;margin:0 auto;padding:10px 16px 0;display:flex;flex-direction:column;gap:8px}
+.top-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.top h1{font-size:1.25rem;font-weight:800;margin-right:auto}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.9rem;font-variant-numeric:tabular-nums;background:var(--card)}
+.chip b{font-family:var(--f-display)}
+.chip.timer.on{border-color:var(--accent);color:var(--accent)}
+.chip.timer.end{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.ghost{background:none;border:1.5px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.9rem}
+.ghost:hover{border-color:var(--ink)}
+nav{display:flex;gap:4px;overflow-x:auto;padding-bottom:0}
+nav a{flex:none;text-decoration:none;color:var(--muted);padding:7px 12px;border:1.5px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;font-size:.92rem;display:flex;gap:6px;align-items:baseline}
+nav a small{font-variant-numeric:tabular-nums;font-size:.75rem}
+nav a:hover{color:var(--ink)}
+nav a[aria-current="true"]{background:var(--paper);color:var(--ink);font-weight:700;border-color:var(--ink)}
+
+main{max-width:1180px;margin:0 auto;padding:24px 16px 64px}
+section{display:none;flex-direction:column;gap:22px}
+section.on{display:flex}
+.sec-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.sec-head h2{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800;margin-right:auto}
+.sec-head h2 span{background:linear-gradient(transparent 58%,var(--mark) 58%)}
+.btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:8px;padding:7px 14px;font-weight:700}
+.btn:hover{filter:brightness(1.1)}
+.btn.alt{background:none;color:var(--ink);border:1.5px solid var(--line);font-weight:400}
+.btn.alt:hover{border-color:var(--ink)}
+
+.rule{background:var(--card);border:1.5px solid var(--ink);border-left-width:8px;border-radius:6px;padding:14px 18px;max-width:78ch}
+.rule p{margin:0 0 6px}.rule p:last-child{margin:0}
+.rule .ex{font-size:1.1rem}
+.m{font-family:var(--f-math);font-size:1.14em;white-space:nowrap}
+.m var{font-style:italic}
+.m sup{font-size:.68em;line-height:0}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.78em;line-height:1.08;margin:0 .1em}
+.frac span:first-child{border-bottom:1.5px solid currentColor;padding:0 .22em 1px}
+.frac span:last-child{padding:1px .22em 0}
+
+.group{display:flex;flex-direction:column;gap:12px}
+.group h3{font-size:1.1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pips{display:inline-flex;gap:3px}
+.pips i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ink)}
+.pips i.f{background:var(--ink)}
+.group h3 small{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px}
+.grid.wide{grid-template-columns:repeat(auto-fill,minmax(min(100%,480px),1fr))}
+
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:12px;min-width:0}
+.card.done{border-color:var(--good)}
+.card.seen{border-color:var(--warn)}
+.num{flex:none;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:.9rem}
+.card.done .num{background:var(--good);border-color:var(--good);color:var(--card)}
+.body{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.q{font-size:1.25rem;overflow-x:auto;padding-bottom:2px}
+.q.text{font-size:1rem;overflow:visible}
+.q.text p{margin:0;max-width:65ch}
+.withfig{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.withfig p{flex:1 1 220px}
+.withfig svg{flex:none;width:150px;max-width:100%;height:auto;color:var(--ink)}
+.part{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.part label{font-weight:700;font-size:.95rem}
+.part input{font-family:var(--f-math);font-size:1.15rem;width:9.5em;max-width:100%;padding:5px 9px;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink)}
+.part input.ok{border-color:var(--good);background:var(--good-bg)}
+.part input.no{border-color:var(--bad);background:var(--bad-bg)}
+.pv{color:var(--muted);font-size:.9rem;min-height:1.4em}
+.keys{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.keys button{min-width:34px;height:30px;border:1.5px solid var(--line);border-radius:6px;background:var(--paper);font-family:var(--f-math);font-size:1rem;padding:0 6px}
+.keys button:hover{border-color:var(--ink)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts .btn{padding:5px 12px;font-size:.92rem}
+.fb{font-size:.95rem;border-radius:6px}
+.fb:empty{display:none}
+.fb.ok{color:var(--good);background:var(--good-bg);padding:6px 10px;font-weight:700}
+.fb.no{color:var(--bad);background:var(--bad-bg);padding:6px 10px}
+.fb.tip{color:var(--warn);background:var(--warn-bg);padding:6px 10px}
+.sol{border-top:1.5px dashed var(--line);padding-top:8px;font-size:.98rem}
+.sol b{font-family:var(--f-display)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts button{border:1.5px solid var(--ink);background:var(--paper);border-radius:8px;padding:6px 14px;min-width:64px}
+.opts button:hover:not(:disabled){background:var(--mark);color:var(--mark-ink)}
+.opts button.ok{background:var(--good-bg);border-color:var(--good);color:var(--good);font-weight:700}
+.opts button.no{background:var(--bad-bg);border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.opts button:disabled{cursor:default}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:16px 18px}
+.panel h3{font-size:1.1rem;margin-bottom:8px}
+.panel p,.panel li{max-width:65ch}
+.panel ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+td,th{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}
+td:last-child,th:last-child{text-align:right;white-space:nowrap}
+tr.break td{color:var(--muted);font-style:italic}
+tfoot td{font-weight:700;border-bottom:none;border-top:2px solid var(--ink)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:0 5px;font-size:.92em}
+.next{display:flex;justify-content:flex-end}
+.next a{text-decoration:none}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="top-row">
+      <h1>Espressioni con i monomi</h1>
+      <span class="chip" title="Esercizi risolti senza guardare la soluzione">Punti <b id="score">0</b> / <span id="total">0</span></span>
+      <span class="chip timer" id="timer" aria-live="off">Timer <b id="tclock">--:--</b></span>
+      <button class="ghost" id="tstop" type="button" hidden>Ferma timer</button>
+      <button class="ghost" id="reset" type="button">Azzera risposte</button>
+    </div>
+    <nav id="nav" aria-label="Tappe della lezione"></nav>
+  </div>
+</header>
+<main id="main"></main>
+
+<script id="core">
+/* ---------- frazioni e monomi ---------- */
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a||1}
+function fr(n,d){if(d===0)throw Error("Il denominatore non può essere 0.");if(d<0){n=-n;d=-d}const g=gcd(n,d);return{n:n/g,d:d/g}}
+function parsePoly(src){
+  let s=String(src).toLowerCase().replace(/[−–—]/g,"-").replace(/[·*×\s]/g,"").replace(/,/g,".");
+  s=s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g,m=>"^"+[...m].map(c=>"⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c)).join(""));
+  s=s.replace(/\((-?\d+(?:\/\d+)?)\)/g,"$1");
+  if(!s)throw Error("Scrivi una risposta.");
+  if(/[()]/.test(s))throw Error("Scrivi il risultato finale, senza parentesi.");
+  const re=/([+-]?)(\d+(?:\.\d+)?)?(?:\/(\d+))?((?:[a-z](?:\^?\d+)?)*)(?:\/(\d+))?/y;
+  const poly=new Map();let pos=0;
+  const bad=()=>Error("Non riesco a leggere «"+s.slice(pos)+"». Esempio di scrittura: -3/4a^2b");
+  while(pos<s.length){
+    re.lastIndex=pos;const m=re.exec(s);
+    if(!m||!m[0]||m[0]==="+"||m[0]==="-")throw bad();
+    if(pos>0&&!m[1])throw bad();
+    if(m[3]&&!m[2])throw bad();
+    let n=1,d=1;
+    if(m[2]){if(m[2].includes(".")){const dec=m[2].split(".")[1].length;n=Math.round(parseFloat(m[2])*10**dec);d=10**dec}else n=parseInt(m[2],10)}
+    if(m[3])d*=parseInt(m[3],10);
+    if(m[5])d*=parseInt(m[5],10);
+    if(m[1]==="-")n=-n;
+    const c=fr(n,d),vars={};
+    for(const v of m[4].matchAll(/([a-z])(?:\^?(\d+))?/g)){const e=v[2]===undefined?1:parseInt(v[2],10);vars[v[1]]=(vars[v[1]]||0)+e}
+    const key=Object.keys(vars).filter(k=>vars[k]>0).sort().map(k=>k+vars[k]).join(" ");
+    const old=poly.get(key);
+    poly.set(key,old?fr(old.n*c.d+c.n*old.d,old.d*c.d):c);
+    pos+=m[0].length;
+  }
+  for(const [k,c] of poly)if(c.n===0)poly.delete(k);
+  return poly;
+}
+function polyEq(a,b){if(a.size!==b.size)return false;for(const [k,c] of a){const o=b.get(k);if(!o||o.n!==c.n||o.d!==c.d)return false}return true}
+function fracHTML(n,d){return '<span class="frac"><span>'+n+'</span><span>'+d+'</span></span>'}
+function polyHTML(p){
+  if(!p.size)return '<span class="m">0</span>';
+  const deg=k=>k?k.split(" ").reduce((t,x)=>t+parseInt(x.slice(1),10),0):0;
+  const keys=[...p.keys()].sort((a,b)=>deg(b)-deg(a)||a.localeCompare(b));
+  let out="";
+  keys.forEach((k,i)=>{
+    const c=p.get(k),neg=c.n<0,an=Math.abs(c.n);
+    out+=i?(neg?" − ":" + "):(neg?"−":"");
+    const lit=k?k.split(" ").map(x=>"<var>"+x[0]+"</var>"+(x.slice(1)!=="1"?"<sup>"+x.slice(1)+"</sup>":"")).join(""):"";
+    if(c.d!==1)out+=fracHTML(an,c.d);else if(an!==1||!lit)out+=an;
+    out+=lit;
+  });
+  return '<span class="m">'+out+'</span>';
+}
+/* notazione degli enunciati: [1/2] frazione, ^3 esponente, * prodotto */
+function fmt(s){
+  return '<span class="m">'+s.replace(/\[(\d+)\/(\d+)\]|\^(\d+)|([a-z])|(-)|(\*)/g,(m,n,d,e,l,minus,dot)=>
+    n?fracHTML(n,d):e?"<sup>"+e+"</sup>":l?"<var>"+l+"</var>":minus?"−":"·")+'</span>';
+}
+function rich(s){return s.split("$").map((t,i)=>i%2?fmt(t):t).join("")}
+
+/* ---------- contenuti ---------- */
+const SECTIONS=[
+{id:"avvio",nav:"Avvio",title:"Avvio: ripasso lampo",min:10,
+ rule:["<b>Ordine delle operazioni:</b> 1. parentesi, 2. potenze, 3. moltiplicazioni e divisioni da sinistra a destra, 4. somme e sottrazioni.","<span class='ex'>$(3a)^2 - 2a * 4a = 9a^2 - 8a^2 = a^2$</span>","Somma: solo tra monomi simili, si sommano i coefficienti. Prodotto: si sommano gli esponenti. Potenza: si moltiplicano gli esponenti. Divisione: si sottraggono gli esponenti."],
+ groups:[
+ {title:"Sei domande veloci",sub:"rispondete insieme, a voce, poi toccate la risposta",items:[
+  {q:"$3a^2 + 5a^2$",opts:["$8a^4$","$8a^2$","$15a^2$","$15a^4$"],c:1,why:"Nella somma si sommano i coefficienti, la parte letterale non cambia."},
+  {q:"$2x^3 * 4x^2$",opts:["$8x^6$","$6x^5$","$8x^5$","$6x^6$"],c:2,why:"Si moltiplicano i coefficienti e si sommano gli esponenti: $3 + 2 = 5$."},
+  {q:"$(-3ab^2)^2$",opts:["$-9a^2b^4$","$9a^2b^4$","$6a^2b^4$","$9ab^4$"],c:1,why:"Esponente pari: segno più. $(-3)^2 = 9$ e ogni esponente si moltiplica per 2."},
+  {q:"$12x^5 : 4x^2$",opts:["$3x^3$","$8x^3$","$3x^7$","$3x^10$"],c:0,why:"Si dividono i coefficienti e si sottraggono gli esponenti: $5 - 2 = 3$."},
+  {q:"$[1/2]a + [1/3]a$",opts:["$[2/5]a$","$[5/6]a$","$[1/6]a$","$[5/6]a^2$"],c:1,why:"Denominatore comune 6: $[3/6] + [2/6] = [5/6]$."},
+  {q:"In $2a + 3a * a$ quale operazione si calcola per prima?",opts:["La somma $2a + 3a$","Il prodotto $3a * a$"],c:1,why:"La moltiplicazione viene prima della somma: si ottiene $2a + 3a^2$, che non si può ridurre."}
+ ]}
+]},
+{id:"interi",nav:"Interi",title:"Espressioni con coefficienti interi",min:25,wide:true,
+ rule:["Scrivete ogni passaggio sul quaderno e inserite qui solo il risultato finale.","<span class='ex'>$(2a)^3 : 4a - 3a * a = 8a^3 : 4a - 3a^2 = 2a^2 - 3a^2 = -a^2$</span>"],
+ groups:[
+ {lv:1,sub:"due operazioni",items:[
+  {q:"2a * 3a + 4a^2",a:"10a^2",h:"Prima il prodotto, poi la somma.",s:"$6a^2 + 4a^2 = 10a^2$"},
+  {q:"(5x - 2x) * 4x",a:"12x^2",h:"Prima la parentesi.",s:"$3x * 4x = 12x^2$"},
+  {q:"(3ab)^2 - 5a^2b^2",a:"4a^2b^2",h:"Prima la potenza.",s:"$9a^2b^2 - 5a^2b^2 = 4a^2b^2$"},
+  {q:"15x^3 : 5x - x^2",a:"2x^2",h:"Prima la divisione.",s:"$3x^2 - x^2 = 2x^2$"}]},
+ {lv:2,sub:"tre o quattro operazioni",items:[
+  {q:"12x^4 : 3x^2 + (-2x)^2",a:"8x^2",h:"Calcolate separatamente la divisione e la potenza, poi sommate.",s:"$4x^2 + 4x^2 = 8x^2$"},
+  {q:"(2a^2b)^3 : (4a^4b) - a^2b^2",a:"a^2b^2",h:"Potenza, poi divisione, poi sottrazione.",s:"$8a^6b^3 : (4a^4b) = 2a^2b^2$, poi $2a^2b^2 - a^2b^2 = a^2b^2$"},
+  {q:"3a * (-2a^2) + (2a)^3 - a^3",a:"a^3",h:"Otterrete tre monomi simili.",s:"$-6a^3 + 8a^3 - a^3 = a^3$"},
+  {q:"(-x^2y)^2 * 2x - 5x^5y^2",a:"-3x^5y^2",h:"Potenza, poi prodotto, poi sottrazione.",s:"$x^4y^2 * 2x = 2x^5y^2$, poi $2x^5y^2 - 5x^5y^2 = -3x^5y^2$"}]},
+ {lv:3,sub:"somme dentro le parentesi",items:[
+  {q:"(4a^2 - a^2) * (2a - 5a)",a:"-9a^3",h:"Risolvete le due parentesi, poi moltiplicate.",s:"$3a^2 * (-3a) = -9a^3$"},
+  {q:"(6x^3y - 2x^3y) : (2xy) + (3x)^2",a:"11x^2",h:"Parentesi, poi divisione e potenza, infine la somma.",s:"$4x^3y : (2xy) = 2x^2$, poi $2x^2 + 9x^2 = 11x^2$"},
+  {q:"[(-2ab)^3 + 5a^3b^3] : (-3ab)",a:"a^2b^2",h:"Risolvete tutta la parentesi quadra prima di dividere.",s:"$-8a^3b^3 + 5a^3b^3 = -3a^3b^3$, poi $-3a^3b^3 : (-3ab) = a^2b^2$"},
+  {q:"(2x)^3 * x - (3x^2)^2 + (-x)^4",a:"0",h:"Tre potenze, un prodotto, poi i monomi simili.",s:"$8x^4 - 9x^4 + x^4 = 0$"}]}
+]},
+{id:"frazioni",nav:"Frazioni",title:"Espressioni con coefficienti frazionari",min:25,wide:true,
+ rule:["Le regole non cambiano: cambia solo il calcolo dei coefficienti. Semplificate le frazioni prima di moltiplicare.","<span class='ex'>$([1/2]a)^2 * 8a - a^3 = [1/4]a^2 * 8a - a^3 = 2a^3 - a^3 = a^3$</span>","Dividere per una frazione vuol dire moltiplicare per il suo reciproco: $[3/4] : [1/2] = [3/4] * 2 = [3/2]$."],
+ groups:[
+ {lv:1,sub:"una frazione per volta",items:[
+  {q:"[1/2]x * 4x - (3x)^2 + 6x^2",a:"-x^2",h:"Otterrete tre monomi simili da sommare.",s:"$2x^2 - 9x^2 + 6x^2 = -x^2$"},
+  {q:"[2/3]a * 3a - [1/2]a^2",a:"3/2a^2",h:"Prima il prodotto.",s:"$2a^2 - [1/2]a^2 = [4/2]a^2 - [1/2]a^2 = [3/2]a^2$"},
+  {q:"([1/2]x)^2 + [3/4]x^2",a:"x^2",h:"Prima la potenza: si elevano numeratore e denominatore.",s:"$[1/4]x^2 + [3/4]x^2 = [4/4]x^2 = x^2$"},
+  {q:"[3/5]ab * 10a - 4a^2b",a:"2a^2b",h:"Semplificate 10 con 5.",s:"$6a^2b - 4a^2b = 2a^2b$"}]},
+ {lv:2,sub:"potenze e divisioni con frazioni",items:[
+  {q:"([2/3]a + [1/3]a)^2 * (-3a)",a:"-3a^3",h:"La somma nella parentesi dà un monomio molto semplice.",s:"$(a)^2 * (-3a) = a^2 * (-3a) = -3a^3$"},
+  {q:"([1/2]xy)^2 : ([1/4]x) - 2xy^2",a:"-xy^2",h:"Potenza, poi divisione per una frazione.",s:"$[1/4]x^2y^2 : ([1/4]x) = xy^2$, poi $xy^2 - 2xy^2 = -xy^2$"},
+  {q:"[3/4]a^3 : ([1/2]a) - ([1/2]a)^2",a:"5/4a^2",h:"Calcolate divisione e potenza, poi portate tutto in quarti.",s:"$[3/2]a^2 - [1/4]a^2 = [6/4]a^2 - [1/4]a^2 = [5/4]a^2$"},
+  {q:"(-[2/3]x^2)^2 * [9/2]x - x^5",a:"x^5",h:"Dopo la potenza, semplificate in croce.",s:"$[4/9]x^4 * [9/2]x = 2x^5$, poi $2x^5 - x^5 = x^5$"}]},
+ {lv:3,sub:"somme di frazioni dentro le parentesi",items:[
+  {q:"(-[3/2]a^2b)^2 : ([3/4]ab) + [1/2]a^2 * (-4ab)",a:"a^3b",h:"Sono due blocchi separati dal segno più: calcolateli uno alla volta.",s:"Primo blocco: $[9/4]a^4b^2 : ([3/4]ab) = 3a^3b$. Secondo blocco: $-2a^3b$. Somma: $3a^3b - 2a^3b = a^3b$"},
+  {q:"([1/2]a - [1/3]a) * 6a + ([1/2]a)^2 * 4",a:"2a^2",h:"Nella parentesi il denominatore comune è 6.",s:"$[1/6]a * 6a = a^2$ e $[1/4]a^2 * 4 = a^2$, quindi $a^2 + a^2 = 2a^2$"},
+  {q:"([3/4]x^2y - [1/4]x^2y)^2 : ([1/2]x^2)",a:"1/2x^2y^2",h:"Parentesi, poi potenza, poi divisione.",s:"$([1/2]x^2y)^2 = [1/4]x^4y^2$, poi $[1/4]x^4y^2 : ([1/2]x^2) = [1/2]x^2y^2$"},
+  {q:"[5/6]x^3 : ([1/3]x) - ([1/2]x + x)^2",a:"1/4x^2",h:"Ricordate che $x$ vale $[2/2]x$.",s:"$[5/6] * 3 = [5/2]$, quindi $[5/2]x^2$. Poi $([3/2]x)^2 = [9/4]x^2$. Infine $[10/4]x^2 - [9/4]x^2 = [1/4]x^2$"}]}
+]},
+{id:"parentesi",nav:"Parentesi",title:"Espressioni con più parentesi",min:20,wide:true,
+ rule:["Si parte dalle parentesi più interne: prima le tonde, poi le quadre, poi le graffe.","<span class='ex'>$[(3a)^2 - 5a^2] : (-2a) = [9a^2 - 5a^2] : (-2a) = 4a^2 : (-2a) = -2a$</span>"],
+ groups:[
+ {lv:1,sub:"tonde e quadre, coefficienti interi",items:[
+  {q:"[3a^2 * (-2a) + (2a)^3] : (-a)",a:"-2a^2",h:"Dentro la quadra: prodotto e potenza, poi la somma.",s:"$-6a^3 + 8a^3 = 2a^3$, poi $2a^3 : (-a) = -2a^2$"},
+  {q:"[(3x)^2 - (2x)^2] * [(x^2)^3 : x^5]",a:"5x^3",h:"Risolvete le due quadre separatamente.",s:"Prima quadra: $9x^2 - 4x^2 = 5x^2$. Seconda quadra: $x^6 : x^5 = x$. Prodotto: $5x^2 * x = 5x^3$"},
+  {q:"[(2x^2y)^3 : (-4x^4y) + (xy)^2] : (-[1/2]xy)",a:"2xy",h:"Risolvete tutta la quadra prima dell'ultima divisione.",s:"$8x^6y^3 : (-4x^4y) = -2x^2y^2$. Poi $-2x^2y^2 + x^2y^2 = -x^2y^2$. Infine $-x^2y^2 : (-[1/2]xy) = 2xy$"}]},
+ {lv:2,sub:"tonde e quadre, coefficienti frazionari",items:[
+  {q:"[([1/2]a)^2 * 8a - a^3]^2 : (a^2)^2",a:"a^2",h:"La quadra dà un solo monomio, che poi va elevato al quadrato.",s:"$[1/4]a^2 * 8a = 2a^3$, poi $2a^3 - a^3 = a^3$. Quindi $(a^3)^2 : a^4 = a^6 : a^4 = a^2$"},
+  {q:"[(-[1/3]xy^2)^2 * 9x - [1/2]x^3y^4] : ([1/4]x^2y^3)",a:"2xy",h:"Potenza, prodotto, sottrazione, poi la divisione.",s:"$[1/9]x^2y^4 * 9x = x^3y^4$. Poi $x^3y^4 - [1/2]x^3y^4 = [1/2]x^3y^4$. Infine $[1/2]x^3y^4 : ([1/4]x^2y^3) = 2xy$"},
+  {q:"(2ab)^2 * [[3/4]a - ([1/2]a + [1/4]a)] + a^3b^2",a:"a^3b^2",h:"Guardate bene quanto vale la parentesi quadra.",s:"$[1/2]a + [1/4]a = [3/4]a$, quindi la quadra vale $0$. Il prodotto è $0$ e resta $a^3b^2$"}]},
+ {lv:3,sub:"sfida",items:[
+  {q:"{[(2x)^3 - 5x^3] * (-[1/3]x)}^2 : ([1/2]x^3)^2",a:"4x^2",h:"Dall'interno verso l'esterno: tonda, quadra, graffa, poi le potenze.",s:"$8x^3 - 5x^3 = 3x^3$. Poi $3x^3 * (-[1/3]x) = -x^4$ e $(-x^4)^2 = x^8$. Il divisore è $[1/4]x^6$. Infine $x^8 : ([1/4]x^6) = 4x^2$"},
+  {q:"[([2/3]a^2b)^2 : ([4/9]a^3b) - [1/2]ab] * (-2a)^2 + (-a)^3 * b",a:"a^3b",h:"La quadra dà un solo monomio. Attenzione al segno di $(-a)^3$.",s:"$[4/9]a^4b^2 : ([4/9]a^3b) = ab$. Poi $ab - [1/2]ab = [1/2]ab$. Poi $[1/2]ab * 4a^2 = 2a^3b$. Infine $2a^3b - a^3b = a^3b$"}]}
+]},
+{id:"geometria",nav:"Geometria",title:"Problemi geometrici",min:20,wide:true,
+ rule:["Le misure sono monomi: si usano le solite formule e si calcola con le regole dei monomi.","<span class='ex'>Rettangolo: perimetro $2 * (b + h)$, area $b * h$. Triangolo: area $(b * h) : 2$. Cubo: volume $l^3$.</span>"],
+ groups:[
+ {lv:1,sub:"una formula",items:[
+  {t:"Un rettangolo ha base $3a$ e altezza $2a$. Calcola perimetro e area.",fig:["rect","3a","2a"],parts:[{l:"Perimetro",a:"10a"},{l:"Area",a:"6a^2"}],s:"Perimetro: $2 * (3a + 2a) = 2 * 5a = 10a$. Area: $3a * 2a = 6a^2$"},
+  {t:"Un quadrato ha il lato lungo $5x$. Calcola perimetro e area.",parts:[{l:"Perimetro",a:"20x"},{l:"Area",a:"25x^2"}],s:"Perimetro: $4 * 5x = 20x$. Area: $(5x)^2 = 25x^2$"},
+  {t:"Un triangolo ha base $4ab$ e altezza $3a$. Calcola l'area.",fig:["tri","4ab","3a"],parts:[{l:"Area",a:"6a^2b"}],s:"$(4ab * 3a) : 2 = 12a^2b : 2 = 6a^2b$"}]},
+ {lv:2,sub:"solidi e formule inverse",items:[
+  {t:"Un cubo ha lo spigolo lungo $2x$. Calcola il volume e la superficie totale.",fig:["cube","2x"],parts:[{l:"Volume",a:"8x^3"},{l:"Superficie",a:"24x^2"}],h:"Il cubo ha 6 facce quadrate uguali.",s:"Volume: $(2x)^3 = 8x^3$. Una faccia: $(2x)^2 = 4x^2$. Superficie: $6 * 4x^2 = 24x^2$"},
+  {t:"Un rettangolo ha area $12a^3b^2$ e base $4a^2b$. Quanto misura l'altezza?",fig:["rect","4a²b","?","A = 12a³b²"],parts:[{l:"Altezza",a:"3ab"}],h:"Formula inversa: altezza = area : base.",s:"$12a^3b^2 : (4a^2b) = 3ab$"},
+  {t:"Un parallelepipedo ha dimensioni $a$, $2a$ e $[3/2]a$. Calcola il volume.",parts:[{l:"Volume",a:"3a^3"}],s:"$a * 2a * [3/2]a = (2 * [3/2])a^3 = 3a^3$"}]},
+ {lv:3,sub:"figure composte: serve un'espressione",items:[
+  {t:"Da un foglio rettangolare con base $5a$ e altezza $3a$ si ritaglia un quadrato di lato $2a$. Quanto misura l'area rimasta?",parts:[{l:"Area rimasta",a:"11a^2"}],h:"Area del rettangolo meno area del quadrato.",s:"$5a * 3a - (2a)^2 = 15a^2 - 4a^2 = 11a^2$"},
+  {t:"La facciata di una casetta è formata da un quadrato di lato $4x$ e da un triangolo con base $4x$ e altezza $3x$. Calcola l'area totale, poi il suo valore in cm² quando $x = 2$ cm.",fig:["house"],parts:[{l:"Area totale",a:"22x^2"},{l:"Valore per x = 2",a:"88"}],h:"Sommate l'area del quadrato e quella del triangolo. Poi sostituite 2 al posto di x.",s:"$(4x)^2 + (4x * 3x) : 2 = 16x^2 + 6x^2 = 22x^2$. Per $x = 2$: $22 * 4 = 88$ cm²"}]}
+]},
+{id:"parole",nav:"Parole",title:"Dalle parole ai monomi",min:10,wide:true,
+ rule:["Scegliete prima che cosa rappresenta la lettera, poi traducete la frase un pezzo alla volta.","<span class='ex'>«Il triplo di un numero $n$ aumentato della sua metà»: $3n + [1/2]n = [7/2]n$</span>"],
+ groups:[
+ {title:"Tradurre e calcolare",sub:"scrivete l'espressione sul quaderno, qui il risultato",items:[
+  {t:"Un quaderno costa $c$ euro. Una penna costa la metà di un quaderno. Quanto spendo per 4 quaderni e 6 penne?",parts:[{l:"Spesa",a:"7c"}],h:"Una penna costa $[1/2]c$.",s:"$4c + 6 * [1/2]c = 4c + 3c = 7c$"},
+  {t:"Luca ha $x$ euro. Marta ha il triplo di Luca, Sara la metà di Luca. Quanti euro hanno in tutto?",parts:[{l:"Totale",a:"9/2x"}],s:"$x + 3x + [1/2]x = [2/2]x + [6/2]x + [1/2]x = [9/2]x$"},
+  {t:"Una piastrella quadrata ha il lato di $3x$ cm. Che area copre un pavimento fatto con 20 piastrelle?",parts:[{l:"Area",a:"180x^2"}],s:"Una piastrella: $(3x)^2 = 9x^2$. Venti piastrelle: $20 * 9x^2 = 180x^2$ cm²"},
+  {t:"Giulia percorre $d$ km al giorno per andare a scuola. Paolo percorre i $[3/2]$ della strada di Giulia. Quanti km percorrono insieme in 4 giorni?",parts:[{l:"Distanza",a:"10d"}],h:"Calcolate prima i km di un giorno, poi moltiplicate per 4.",s:"$4 * (d + [3/2]d) = 4 * [5/2]d = 10d$"},
+  {t:"Traduci e calcola: «il doppio del quadrato di un numero $n$, diminuito del quadrato del doppio di $n$».",parts:[{l:"Risultato",a:"-2n^2"}],h:"Doppio del quadrato: $2n^2$. Quadrato del doppio: $(2n)^2$.",s:"$2n^2 - (2n)^2 = 2n^2 - 4n^2 = -2n^2$"}]}
+]},
+{id:"sfida",nav:"Sfida",title:"Sfida finale: vero o falso?",min:5,
+ rule:["Sei uguaglianze: alcune nascondono gli errori più comuni nelle espressioni. Votate per alzata di mano, poi toccate la risposta."],
+ groups:[
+ {title:"Caccia all'errore",sub:"una risposta per ciascuna",items:[
+  {q:"$2a + 3a * a = 5a^2$",opts:["Vero","Falso"],c:1,why:"Prima il prodotto: $2a + 3a^2$. I due monomi non sono simili e non si sommano."},
+  {q:"$(2x)^3 = 6x^3$",opts:["Vero","Falso"],c:1,why:"Il coefficiente va elevato, non moltiplicato per 3: $2^3 = 8$, quindi $8x^3$."},
+  {q:"$(3a)^2 - 3a^2 = 6a^2$",opts:["Vero","Falso"],c:0,why:"$9a^2 - 3a^2 = 6a^2$. La parentesi fa la differenza."},
+  {q:"$a^2 * a^3 = a^6$",opts:["Vero","Falso"],c:1,why:"Nel prodotto gli esponenti si sommano: $a^5$."},
+  {q:"$6a^3 : 2a^3 + 1 = 4$",opts:["Vero","Falso"],c:0,why:"$6a^3 : 2a^3 = 3$, poi $3 + 1 = 4$."},
+  {q:"$-x^2 - x^2 = 0$",opts:["Vero","Falso"],c:1,why:"$(-1 - 1)x^2 = -2x^2$. Darebbe zero $-x^2 + x^2$."}]}
+]}
+];
+</script>
+
+<script>
+(function(){
+const KEY="lezione-monomi-v2";
+let st={};
+try{st=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){st={}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const main=document.getElementById("main"),nav=document.getElementById("nav");
+const all=[];let uid=0;
+
+/* figure */
+function figure(f){
+  const a='fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"';
+  const t=(x,y,s,anc)=>'<text x="'+x+'" y="'+y+'" font-size="15" font-family="STIX Two Text,serif" font-style="italic" fill="currentColor" text-anchor="'+(anc||"middle")+'">'+s+'</text>';
+  const dash='stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4"';
+  if(f[0]==="rect")return '<svg viewBox="0 0 200 130" role="img" aria-label="Rettangolo"><rect x="14" y="14" width="140" height="80" '+a+'/>'+(f[3]?t(84,59,f[3]):"")+t(84,114,f[1])+t(162,59,f[2],"start")+'</svg>';
+  if(f[0]==="tri")return '<svg viewBox="0 0 200 130" role="img" aria-label="Triangolo con altezza tratteggiata"><polygon points="14,100 174,100 70,16" '+a+'/><line x1="70" y1="16" x2="70" y2="100" '+dash+'/>'+t(94,120,f[1])+t(76,66,f[2],"start")+'</svg>';
+  if(f[0]==="cube")return '<svg viewBox="0 0 200 150" role="img" aria-label="Cubo"><rect x="24" y="48" width="84" height="84" '+a+'/><polygon points="24,48 56,20 140,20 108,48" '+a+'/><polygon points="108,48 140,20 140,104 108,132" '+a+'/>'+t(66,148,f[1])+'</svg>';
+  return '<svg viewBox="0 0 200 190" role="img" aria-label="Quadrato sormontato da un triangolo"><rect x="40" y="76" width="92" height="92" '+a+'/><polygon points="40,76 132,76 86,14" '+a+'/><line x1="86" y1="14" x2="86" y2="76" '+dash+'/>'+t(86,186,"4x")+t(140,126,"4x","start")+t(92,56,"3x","start")+'</svg>';
+}
+
+function setCard(card,s){card.classList.toggle("done",!!s.done);card.classList.toggle("seen",!!s.rev&&!s.done)}
+const counted=s=>s&&s.done&&!s.rev&&!s.late;
+function refresh(){
+  let tot=0;
+  SECTIONS.forEach(sec=>{
+    const n=sec.ids.filter(id=>counted(st[id])).length;tot+=n;
+    sec.badge.textContent=n+"/"+sec.ids.length;
+  });
+  document.getElementById("score").textContent=tot;
+  document.getElementById("total").textContent=all.length;
+}
+
+function mcCard(item,id,n){
+  const card=el("div","card"),s=st[id]||(st[id]={});
+  card.append(el("div","num",n));
+  const body=el("div","body");card.append(body);
+  body.append(el("div","q text","<p>"+rich(item.q)+"</p>"));
+  const opts=el("div","opts"),fb=el("div","fb");fb.setAttribute("aria-live","polite");
+  const finish=()=>{[...opts.children].forEach((b,i)=>{b.disabled=true;if(i===item.c)b.classList.add("ok")});fb.className="fb ok";fb.innerHTML="Giusto. "+rich(item.why);setCard(card,s)};
+  item.opts.forEach((o,i)=>{
+    const b=el("button",null,rich(o));b.type="button";
+    b.onclick=()=>{
+      if(i===item.c){s.done=true;save();finish();refresh()}
+      else{b.classList.add("no");b.disabled=true;s.late=true;save();fb.className="fb no";fb.textContent="Non è questa. Rileggete la regola e riprovate."}
+    };
+    opts.append(b);
+  });
+  body.append(opts,fb);
+  if(s.done)finish();
+  return card;
+}
+
+function inCard(item,id,n){
+  const parts=item.parts||[{a:item.a}];
+  const card=el("div","card"),s=st[id]||(st[id]={});s.vals=s.vals||[];
+  card.append(el("div","num",n));
+  const body=el("div","body");card.append(body);
+  if(item.t){
+    const q=el("div","q text"+(item.fig?" withfig":""),"<p>"+rich(item.t)+"</p>"+(item.fig?figure(item.fig):""));
+    body.append(q);
+  }else body.append(el("div","q",fmt(item.q)+' <span class="m">=</span>'));
+  const inputs=[];let last=null;
+  parts.forEach((p,i)=>{
+    const row=el("div","part"),iid="in-"+id+"-"+i;
+    const lab=el("label",null,p.l?p.l+" =":"Risultato");lab.htmlFor=iid;
+    if(!p.l)lab.style.cssText="position:absolute;left:-9999px";
+    const inp=el("input");inp.id=iid;inp.type="text";inp.autocomplete="off";inp.autocapitalize="off";inp.spellcheck=false;inp.placeholder="es. -3/4a^2b";
+    const pv=el("span","pv");
+    const preview=()=>{try{pv.innerHTML=inp.value.trim()?"letto come "+polyHTML(parsePoly(inp.value)):""}catch(e){pv.textContent=""}};
+    inp.value=s.vals[i]||"";preview();
+    inp.oninput=()=>{inp.classList.remove("ok","no");s.vals[i]=inp.value;save();preview()};
+    inp.onfocus=()=>{last=inp};
+    inp.onkeydown=e=>{if(e.key==="Enter")verify()};
+    row.append(lab,inp,pv);body.append(row);inputs.push(inp);
+  });
+  const keys=el("div","keys");
+  [["^","^","esponente"],["x²","^2","alla seconda"],["x³","^3","alla terza"],["/","/","frazione"],["−","-","meno"]].forEach(k=>{
+    const b=el("button",null,k[0]);b.type="button";b.title="Inserisci: "+k[2];b.setAttribute("aria-label","Inserisci "+k[2]);
+    b.onmousedown=e=>e.preventDefault();
+    b.onclick=()=>{const inp=last||inputs[0];const a=inp.selectionStart??inp.value.length,z=inp.selectionEnd??a;inp.value=inp.value.slice(0,a)+k[1]+inp.value.slice(z);inp.focus();inp.setSelectionRange(a+k[1].length,a+k[1].length);inp.oninput()};
+    keys.append(b);
+  });
+  body.append(keys);
+  const acts=el("div","acts"),fb=el("div","fb"),sol=el("div","sol","<b>Soluzione.</b> "+rich(item.s));
+  fb.setAttribute("aria-live","polite");sol.hidden=true;
+  const bV=el("button","btn","Verifica");bV.type="button";
+  acts.append(bV);
+  if(item.h){const bH=el("button","btn alt","Suggerimento");bH.type="button";bH.onclick=()=>{fb.className="fb tip";fb.innerHTML=rich(item.h)};acts.append(bH)}
+  const bS=el("button","btn alt","Soluzione");bS.type="button";
+  bS.onclick=()=>{sol.hidden=!sol.hidden;if(!sol.hidden&&!s.done){s.rev=true;save();setCard(card,s);refresh()}};
+  acts.append(bS);body.append(acts,fb,sol);
+  function verify(){
+    let ok=0,msg="";
+    parts.forEach((p,i)=>{
+      const inp=inputs[i];let got;
+      try{got=parsePoly(inp.value)}catch(e){inp.classList.remove("ok");inp.classList.add("no");msg=msg||e.message;return}
+      const want=parsePoly(p.a);
+      if(polyEq(got,want)){inp.classList.remove("no");inp.classList.add("ok");ok++}
+      else{
+        inp.classList.remove("ok");inp.classList.add("no");
+        if(!msg&&got.size===1&&want.size===1){
+          const [gk,gc]=[...got][0],[wk,wc]=[...want][0];
+          if(gk===wk&&gc.n===-wc.n&&gc.d===wc.d)msg="Quasi: controllate il segno.";
+          else if(gk===wk)msg="La parte letterale è giusta. Ricontrollate il coefficiente.";
+          else if(gc.n===wc.n&&gc.d===wc.d)msg="Il coefficiente è giusto. Ricontrollate gli esponenti delle lettere.";
+        }
+      }
+    });
+    if(ok===parts.length){s.done=true;fb.className="fb ok";fb.textContent=s.rev?"Corretto (dopo aver visto la soluzione).":"Corretto.";}
+    else{fb.className="fb no";fb.textContent=msg||(parts.length>1&&ok?"Una risposta è giusta, l'altra no. Riprovate.":"Non ancora. Rifate i passaggi sul quaderno e riprovate.")}
+    save();setCard(card,s);refresh();
+  }
+  bV.onclick=verify;
+  if(s.done){inputs.forEach(i=>i.classList.add("ok"));fb.className="fb ok";fb.textContent="Corretto."}
+  if(s.rev)sol.hidden=false;
+  setCard(card,s);
+  return card;
+}
+
+/* costruzione pagina */
+SECTIONS.forEach((sec,si)=>{
+  sec.ids=[];
+  const a=el("a",null,sec.nav+" ");a.href="#"+sec.id;sec.badge=el("small");a.append(sec.badge);nav.append(a);sec.link=a;
+  const s=el("section");s.id="sec-"+sec.id;sec.node=s;
+  const head=el("div","sec-head");
+  head.append(el("h2",null,"<span>"+sec.title+"</span>"),el("span","chip","Tempo previsto <b>"+sec.min+" min</b>"));
+  const bt=el("button","btn alt","Avvia timer");bt.type="button";bt.onclick=()=>startTimer(sec.min);head.append(bt);
+  s.append(head);
+  if(sec.id==="avvio")s.append(introPanels());
+  if(sec.rule)s.append(el("div","rule",sec.rule.map(r=>"<p>"+rich(r)+"</p>").join("")));
+  let n=0;
+  sec.groups.forEach(g=>{
+    const grp=el("div","group");
+    const pips=g.lv?'<span class="pips" aria-hidden="true">'+[1,2,3].map(i=>'<i class="'+(i<=g.lv?"f":"")+'"></i>').join("")+'</span>':"";
+    grp.append(el("h3",null,pips+(g.title||"Livello "+g.lv)+" <small>"+g.sub+"</small>"));
+    const grid=el("div","grid"+(sec.wide?" wide":""));
+    g.items.forEach(item=>{
+      n++;const id=sec.id+"-"+n;sec.ids.push(id);all.push(id);
+      grid.append(item.opts?mcCard(item,id,n):inCard(item,id,n));
+    });
+    grp.append(grid);s.append(grp);
+  });
+  const nx=SECTIONS[si+1];
+  if(nx)s.append(el("div","next",'<a class="btn" href="#'+nx.id+'">Avanti: '+nx.title+'</a>'));
+  else s.append(closing());
+  main.append(s);
+});
+
+function introPanels(){
+  const w=el("div","two");
+  const rows=SECTIONS.map((s,i)=>(i===3?'<tr class="break"><td>Pausa</td><td>5 min</td></tr>':"")+"<tr><td>"+s.title+"</td><td>"+s.min+" min</td></tr>").join("");
+  w.append(el("div","panel","<h3>Il piano delle due ore</h3><table><thead><tr><th>Tappa</th><th>Durata</th></tr></thead><tbody>"+rows+"</tbody><tfoot><tr><td>Totale</td><td>120 min</td></tr></tfoot></table>"));
+  w.append(el("div","panel","<h3>Come si lavora</h3><ul><li>Dopo il ripasso lampo si lavora solo sulle espressioni, che salgono di livello: coefficienti interi, coefficienti frazionari, più parentesi. Poi i problemi.</li><li>Fate i passaggi sul quaderno e scrivete qui solo il risultato finale.</li><li>Per scrivere "+fmt("a^2")+" digitate <code>a^2</code> oppure <code>a2</code>. Per "+fmt("-[3/4]ab")+" digitate <code>-3/4ab</code>.</li><li>Un punto per ogni esercizio risolto senza aprire la soluzione.</li><li>Per il docente: livello 1 insieme alla lavagna, livelli 2 e 3 a coppie. Chi finisce prima passa alla tappa successiva.</li></ul>"));
+  return w;
+}
+function closing(){
+  return el("div","panel","<h3>Che cosa portiamo a casa</h3><ul><li><b>Somma:</b> solo tra monomi simili, si sommano i coefficienti.</li><li><b>Prodotto:</b> si moltiplicano i coefficienti, si sommano gli esponenti.</li><li><b>Potenza:</b> si eleva il coefficiente, si moltiplicano gli esponenti.</li><li><b>Divisione:</b> si dividono i coefficienti, si sottraggono gli esponenti.</li><li><b>Espressioni:</b> parentesi, potenze, prodotti e divisioni, somme.</li></ul>");
+}
+
+/* navigazione */
+function show(){
+  const id=(location.hash||"").slice(1);
+  const cur=SECTIONS.find(s=>s.id===id)||SECTIONS[0];
+  SECTIONS.forEach(s=>{s.node.classList.toggle("on",s===cur);s.link.setAttribute("aria-current",s===cur?"true":"false")});
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",show);
+
+/* timer */
+const tchip=document.getElementById("timer"),tclock=document.getElementById("tclock"),tstop=document.getElementById("tstop");
+let tEnd=0,tInt=null;
+function tick(){
+  const left=Math.max(0,Math.round((tEnd-Date.now())/1000));
+  tclock.textContent=String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0");
+  if(left===0){clearInterval(tInt);tInt=null;tchip.className="chip timer end";tclock.textContent="tempo scaduto"}
+}
+function startTimer(min){clearInterval(tInt);tEnd=Date.now()+min*60000;tchip.className="chip timer on";tstop.hidden=false;tick();tInt=setInterval(tick,500)}
+tstop.onclick=()=>{clearInterval(tInt);tInt=null;tchip.className="chip timer";tclock.textContent="--:--";tstop.hidden=true};
+
+/* azzera */
+const rb=document.getElementById("reset");let armed=null;
+rb.onclick=()=>{
+  if(!armed){rb.textContent="Confermi? Tocca di nuovo";armed=setTimeout(()=>{armed=null;rb.textContent="Azzera risposte"},4000);return}
+  try{localStorage.removeItem(KEY)}catch(e){}
+  location.reload();
+};
+
+refresh();show();
+})();
+</script>
+</body>
+</html>
